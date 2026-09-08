@@ -104,6 +104,31 @@ class TestHandPortalModules(unittest.TestCase):
         self.assertIsNotNone(tracker.hands)
         tracker.close()
 
+    def test_video_texture_loader(self):
+        from main import VideoTextureLoader
+        loader = VideoTextureLoader("assets/portal_texture.mp4")
+        frame = loader.get_frame()
+        self.assertIsNotNone(frame)
+        self.assertEqual(len(frame.shape), 3)
+        loader.release()
+
+    def test_fist_gesture_detector(self):
+        from src.geometry import FistGestureDetector
+        detector = FistGestureDetector(cooldown=0.2)
+
+        # Inicialmente abierto: no debe disparar
+        self.assertFalse(detector.update(is_closed=False))
+
+        # Pasa a cerrado (flanco ascendente): debe disparar True
+        self.assertTrue(detector.update(is_closed=True))
+
+        # Continúa cerrado: no debe volver a disparar
+        self.assertFalse(detector.update(is_closed=True))
+
+        # Se abre de nuevo: no dispara
+        self.assertFalse(detector.update(is_closed=False))
+
 
 if __name__ == "__main__":
     unittest.main()
+

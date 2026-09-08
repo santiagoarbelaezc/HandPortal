@@ -190,3 +190,38 @@ class TemporalSmoother:
 
         radii = np.interp(self.angles, angles_extended, dists_extended)
         return radii
+
+
+class FistGestureDetector:
+    """
+    Detector de eventos para el gesto de puño cerrado con control de estado
+    y tiempo de enfriamiento (cooldown) para cambiar de filtro de manera limpia.
+    """
+
+    def __init__(self, cooldown: float = 0.75) -> None:
+        """
+        Args:
+            cooldown: Tiempo mínimo en segundos entre cambios de filtro consecutivos.
+        """
+        self.cooldown = cooldown
+        self.last_trigger_time = 0.0
+        self.was_closed = False
+
+    def update(self, is_closed: bool) -> bool:
+        """
+        Retorna True únicamente en el instante en que la mano pasa de abierta a cerrada
+        (flanco ascendente), respetando el período de cooldown.
+        """
+        import time
+
+        now = time.time()
+        triggered = False
+
+        if is_closed and not self.was_closed:
+            if (now - self.last_trigger_time) >= self.cooldown:
+                triggered = True
+                self.last_trigger_time = now
+
+        self.was_closed = is_closed
+        return triggered
+
